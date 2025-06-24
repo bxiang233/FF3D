@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="ForestFormer3D: A Unified Framework for End-to-End Segmentation of Forest LiDAR 3D Point Clouds">
+  <meta name="keywords" content="3D point cloud segmentation, digital forest, individual tree segmentation">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ForestFormer3D</title>
+
+  <!-- Google fonts -->
+  <link href="./static/css/css.css" rel="stylesheet">
+
+  <!-- Core CSS -->
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="./static/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+
+  <!-- Slick carousel css -->
+  <link rel="stylesheet" href="./static/css/slick.min.css"/>
+  <link rel="stylesheet" href="./static/css/slick-theme.min.css"/>
+
+  <!-- TwentyTwenty css -->
+  <link rel="stylesheet" href="./static/css/twentytwenty.css"/>
+
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <!-- =========== JS =========== -->
+  <!-- jQuery FIRST -->
+  <script src="./static/js/jquery.min.js"></script>
+  <!-- dependencies for TwentyTwenty (must load after jQuery) -->
+  <script src="./static/js/jquery.event.move.min.js"></script>
+  <script src="./static/js/jquery.twentytwenty.js"></script>
+  <!-- Slick carousel -->
+  <script src="./static/js/slick.min.js"></script>
+  <!-- Font Awesome (optional) -->
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+
+  <!-- quick overrides -->
+  <style>
+    .dnerf{font-weight:bold;color:#ff6600;}
+
+    /* TwentyTwenty look */
+    #ff3d-compare{border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.12);overflow:hidden;}
+    .twentytwenty-horizontal .twentytwenty-handle{
+      font-family: "Font Awesome 5 Free";
+      font-weight: 900;               
+      position: relative;
+    }
+
+    .twentytwenty-horizontal .twentytwenty-handle:before{
+      content:"\\f337";               /* fa-arrows-alt-h */
+      font-size:22px;                 
+      color:#555;                     
+      position:absolute;
+      left:54%; top:50%;
+      transform:translate(-50%,-50%);
+    }
+    .twentytwenty-horizontal .twentytwenty-handle:after{display:none;}
+  
+    .twentytwenty-horizontal .twentytwenty-line{
+      z-index:9;                     
+    }
+
+    /* slick dots */
+    .slick-dots li button:before{
+      color:#ff6600;          
+      font-size:12px;        
+    }
+
+    .slick-dots li button:hover:before,
+    .slick-dots li.slick-active button:before{
+      color:#ff3300;          
+      opacity:1;              
+    }
+
+    .slick-dots{
+      bottom:-35px;          
+      text-align:left;        
+    }
+
+
+    /* optional image scaling */
+    #geo-overview-img{max-width:50%;}
+    #comparison-img{max-width:80%;}
+
+    html        { font-size: 15px; }   
+    body        { line-height: 1.5;  } 
+
+    .title.is-1 { font-size: 2.2rem; } 
+    .title.is-3 { font-size: 1.4rem; }
+
+    .title, .subtitle, h1, h2, h3, h4 { text-transform: none !important; }
+
+    /* thumbnail bar */
+    .thumbs{
+      margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap
+    }
+    .thumb{
+      position:relative;
+      border:2px solid #ccc;
+      border-radius:4px;
+      overflow:hidden;
+      cursor:pointer;
+      transition:.2s;
+    }
+    .thumb.active{border-color:#ff6600;opacity:1}
+    .thumb:hover  img{opacity:1}
+
+    .thumb img{
+      width:110px;height:70px;object-fit:cover;display:block;opacity:.85;
+      transition:.2s;
+    }
+
+    .thumb .cap{
+      position:absolute;left:0;right:0;bottom:0;
+      background:rgba(0,0,0,.55);
+      color:#fff;font-size:.7rem;line-height:1.3;
+      text-align:center;padding:2px 0;
+      pointer-events:none;          
+    }
+
+
+  </style>
+
+</head>
+<body>
+<!-- NAVBAR -->
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand"><a role="button" class="navbar-burger"><span></span><span></span><span></span></a></div>
+  <div class="navbar-menu"><div class="navbar-start" style="flex-grow:1;justify-content:center;">
+    <a class="navbar-item" href="https://forestsens.com/"><span class="icon"><i class="fas fa-home"></i></span></a>
+    <div class="navbar-item has-dropdown is-hoverable"><a class="navbar-link">More related research</a>
+      <div class="navbar-dropdown"><a class="navbar-item" href="https://www.sciencedirect.com/science/article/pii/S0034425724003936">SegmentAnyTree</a><a class="navbar-item" href="https://www.sciencedirect.com/science/article/pii/S0034425724000890">ForAINet</a></div>
+    </div>
+  </div></div>
+</nav>
+
+<!-- TITLE -->
+<section class="hero"><div class="hero-body"><div class="container is-max-desktop"><div class="columns is-centered"><div class="column has-text-centered">
+  <h1 class="title is-1 publication-title">ForestFormer3D: A Unified Framework for End-to-End Segmentation of Forest LiDAR 3D Point Clouds</h1>
+  <div class="publication-links mt-4">
+    <span class="link-block">
+      <a href="https://arxiv.org/abs/2506.16991"
+         class="external-link button is-rounded is-dark">
+        <span class="icon"><i class="fas fa-file-pdf"></i></span>
+        <span>arXiv</span>
+      </a>
+    </span>
+
+    <!-- 新增：Code（占位） -->
+    <span class="link-block">
+      <a class="button is-rounded is-light is-static">  <!-- is-static = 不可点 -->
+        <span class="icon"><i class="fab fa-github"></i></span>
+        <span>Code · soon</span>
+      </a>
+    </span>
+
+    <!-- 新增：Dataset（占位）-->
+    <span class="link-block">
+      <a class="button is-rounded is-light is-static">
+        <span class="icon"><i class="fas fa-database"></i></span>
+        <span>Dataset · soon</span>
+      </a>
+    </span>
+  </div>
+</div></div></div></div></section>
+
+<!-- HERO TEASER -->
+<section class="hero teaser"><div class="container is-max-desktop"><div class="hero-body">
+  <div class="twentytwenty-container" id="ff3d-compare">
+    <img src="./static/images/semanticBlueCat.BMP" alt="Semantic view">
+    <img src="./static/images/instanceBlueCat.BMP" alt="Instance view">
+  </div>
+  <h2 class="subtitle has-text-centered mt-5"><span class="dnerf">ForestFormer3D achieves new state‑of‑the‑art individual tree segmentation and scene‑level semantic segmentation in complex forests</span></h2>
+</div></div></section>
+
+<script>
+  $(function(){
+    $('#ff3d-compare').twentytwenty({default_offset_pct:0.5,before_label:'Semantic',after_label:'Instance',move_slider_on_hover:false,move_with_handle_only:true});
+  });
+</script>
+
+<!-- ABSTRACT -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            The segmentation of forest LiDAR 3D point clouds, including both individual tree and semantic segmentation,
+            is fundamental for advancing forest management and ecological research. However, current approaches often
+            struggle with the complexity and variability of natural forest environments.
+          </p>
+          <p>
+            We present <strong>ForestFormer3D</strong>, a new unified and end-to-end framework designed for precise individual tree and semantic segmentation. ForestFormer3D incorporates ISA-guided query point selection, a score-based block merging strategy during inference, and a one-to-many association mechanism for effective training. By combining these new components, our model achieves state-of-the-art performance for individual tree segmentation on the newly introduced <strong>FOR-instanceV2</strong> dataset, which spans diverse forest types and regions.
+          </p>
+          <p>
+            Additionally, ForestFormer3D generalizes well to unseen test sets (Wytham woods and LAUTx), showcasing its robustness across different forest conditions and sensor modalities. The FOR-instanceV2 dataset and the ForestFormer3D code will be released soon.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FRAMEWORK ILLUSTRATION -->
+<section class="section"><div class="container is-max-desktop"><div class="columns is-centered has-text-centered"><div class="column is-four-fifths"><h2 class="title is-3">Illustration of our ForestFormer3D framework</h2><div class="image-container" style="margin-top:1rem;"><img src="./static/images/pipeline.png" alt="Framework Illustration" style="max-width:100%;height:auto;"></div></div></div></div></section>
+
+<!-- DATASET GEO -->
+<section class="section"><div class="container is-max-desktop"><div class="columns is-centered has-text-centered"><div class="column is-four-fifths"><h2 class="title is-3">Geographical overview of the FOR‑instanceV2 dataset</h2><div class="image-container" style="margin-top:1rem;"><img id="geo-overview-img" src="./static/images/map.jpg" alt="FOR‑instanceV2 overview" style="width:100%;height:auto;"></div></div></div></div></section>
+
+<!-- COMPARISON -->
+<section class="section"><div class="container is-max-desktop"><div class="columns is-centered has-text-centered"><div class="column is-four-fifths"><h2 class="title is-3">Comparison with other methods</h2><div class="content has-text-justified"><p>Results on the FOR‑instanceV2 test split. The best results are in <b>bold</b>, and the second best ones are <u>underlined</u>.</p></div><div class="image-container" style="margin-top:1rem;"><img id="comparison-img" src="./static/images/comparison_with_others.png" alt="Method comparison" style="width:100%;height:auto;"></div></div></div></div></section>
+
+<!-- VIDEO -->
+<!-- <section class="section"><div class="container is-max-desktop"><div class="columns is-centered has-text-centered"><div class="column is-four-fifths"><h2 class="title is-3">Video</h2><div class="publication-video"><iframe src="https://www.youtube.com/embed/Wppy5AH7iDQ?rel=0&showinfo=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe></div></div></div></div></section> -->
+<!-- ===== Qualitative point-cloud comparison ===== -->
+<section class="section" id="qualitative">
+  <div class="container is-max-desktop">
+    <h2 class="title is-4 has-text-centered" style="font-weight:700">Qualitative results</h2>
+
+    <div class="field has-addons is-justify-content-center mb-3">
+      <button class="button is-small is-link switch" data-mode="geo">Instance seg.</button>
+      <button class="button is-small switch is-light" data-mode="sem">Semantic seg.</button>
+    </div>
+
+    <style>
+      #pc-wrap{display:flex;gap:10px}
+      #pc-wrap canvas{
+        width:100%;
+        height:100%;           
+        background:#fff !important;
+        border:1px solid #ddd;
+        display:block;        
+      }
+      .panel{position:relative;flex:1;height:420px;           
+        overflow:hidden;}
+      .panel .label{position:absolute;left:8px;top:6px;background:#0008;color:#fff;
+                    font-size:.75rem;padding:2px 6px;border-radius:4px;user-select:none}
+    </style>
+
+    <div id="pc-wrap">
+      <div class="panel">
+        <div class="label">GT</div><canvas id="c1"></canvas>
+      </div>
+      <div class="panel">
+        <div class="label">Prediction</div><canvas id="c2"></canvas>
+      </div>
+    </div>
+     
+    <div id="thumb-bar" class="thumbs">
+      <!-- scene1 → CULS -->
+      <div class="thumb active"  data-scene="scene1">
+        <img src="./static/thumbs/CULS.bmp" alt="CULS">
+        <span class="cap">CULS</span>
+      </div>
+
+      <!-- scene2 → NIBIO_MLS -->
+      <div class="thumb" data-scene="scene2">
+        <img src="./static/thumbs/NIBIO_MLS.bmp" alt="NIBIO_MLS">
+        <span class="cap">NIBIO_MLS</span>
+      </div>
+
+      <!-- scene3 → NIBIO plot1 -->
+      <div class="thumb" data-scene="scene3">
+        <img src="./static/thumbs/NIBIO_plot1.bmp"  alt="NIBIO plot1">
+        <span class="cap">NIBIO plot1</span>
+      </div>
+
+      <!-- scene4 → BlueCat -->
+      <div class="thumb" data-scene="scene4">
+        <img src="./static/thumbs/Blue_Cat.bmp" alt="Blue Cat">
+        <span class="cap">Blue Cat</span>
+      </div>
+
+      <div class="thumb" data-scene="scene5">
+        <img src="./static/thumbs/NIBIO2_PLOT3.bmp" alt="NIBIO2 plot3">
+        <span class="cap">NIBIO2 plot3</span>
+      </div>
+
+      <div class="thumb" data-scene="scene6">
+        <img src="./static/thumbs/RMIT.bmp" alt="RMIT">
+        <span class="cap">RMIT</span>
+      </div>
+
+      <div class="thumb" data-scene="scene7">
+        <img src="./static/thumbs/SCION_plot31.bmp" alt="SCION plot31">
+        <span class="cap">SCION plot31</span>
+      </div>
+
+      <div class="thumb" data-scene="scene8">
+        <img src="./static/thumbs/TUWIEN.bmp" alt="TUWIEN">
+        <span class="cap">TUWIEN</span>
+      </div>
+
+      <div class="thumb" data-scene="scene9">
+        <img src="./static/thumbs/Yuchen.bmp" alt="Yuchen">
+        <span class="cap">Yuchen</span>
+      </div>
+    </div>
+
+
+  </div>
+</section>
+
+
+<!-- =============== BIBTEX =============== -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">
+      BibTeX <span role="img" aria-label="please-cite">🙏</span>
+    </h2>
+<pre><code>@misc{xiang2025forestformer3d,
+  title          = {ForestFormer3D: A Unified Framework for End-to-End Segmentation of Forest LiDAR 3D Point Clouds},
+  author         = {Binbin Xiang and Maciej Wielgosz and Stefano Puliti and Kamil Kr{\'a}l and Martin Kr\r{u}\v{c}ek and Azim Missarov and Rasmus Astrup},
+  year           = {2025},
+  eprint         = {2506.16991},
+  archivePrefix  = {arXiv},
+  primaryClass   = {cs.CV}
+}
+
+</code></pre>
+  </div>
+</section>
+
+<!-- =============== FOOTER =============== -->
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link" href="https://arxiv.org/pdf/2506.16991.pdf"><i class="fas fa-file-pdf"></i></a>
+      <a class="icon-link" href="#" class="external-link" disabled><i class="fab fa-github"></i></a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            Website template based on <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> and licensed under a
+            <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "./static/js/three.module.js"
+    }
+  }
+</script>
+<script type="module">
+import * as THREE from "./static/js/three.module.js";
+import {PLYLoader} from "./static/js/PLYLoader.js";
+import {OrbitControls} from "./static/js/OrbitControls.js";
+
+const scenes = {
+  scene1:{
+    geo:{gt:"./static/ply/CULS_CULS_plot_2_instance_gt_01.ply",  pred:"./static/ply/CULS_CULS_plot_2_instance_prediction_01.ply"},
+    sem:{gt:"./static/ply/CULS_CULS_plot_2_semantic_gt_01.ply",  pred:"./static/ply/CULS_CULS_plot_2_semantic_prediction_01.ply"}
+  },
+  scene2:{
+    geo:{gt:"./static/ply/NIBIO_MLS_MLS_burumPlot_2_instance_gt_005.ply",  pred:"./static/ply/NIBIO_MLS_MLS_burumPlot_2_instance_prediction_005.ply"},
+    sem:{gt:"./static/ply/NIBIO_MLS_MLS_burumPlot_2_semantic_gt_005.ply",  pred:"./static/ply/NIBIO_MLS_MLS_burumPlot_2_semantic_prediction_005.ply"}
+  },
+  scene3:{
+    geo:{gt:"./static/ply/NIBIO_NIBIO_plot_1_instance_gt_01.ply",  pred:"./static/ply/NIBIO_NIBIO_plot_1_instance_prediction_01.ply"},
+    sem:{gt:"./static/ply/NIBIO_NIBIO_plot_1_semantic_gt_01.ply",  pred:"./static/ply/NIBIO_NIBIO_plot_1_semantic_prediction_01.ply"}
+  },
+  scene4:{
+    geo:{gt:"./static/ply/BlueCat_RN_instance_gt_01.ply",  pred:"./static/ply/BlueCat_RN_instance_prediction_01.ply"},
+    sem:{gt:"./static/ply/BlueCat_RN_semantic_gt_01.ply",  pred:"./static/ply/BlueCat_RN_semantic_prediction_01.ply"}
+  },
+  scene5:{
+    geo:{gt:"./static/ply/NIBIO2_NIBIO2_plot3_instance_gt.ply",  pred:"./static/ply/NIBIO2_NIBIO2_plot3_instance_prediction.ply"},
+    sem:{gt:"./static/ply/NIBIO2_NIBIO2_plot3_semantic_gt.ply",  pred:"./static/ply/NIBIO2_NIBIO2_plot3_semantic_prediction.ply"}
+  },
+  scene6:{
+    geo:{gt:"./static/ply/RMIT_RMIT_test_instance_gt.ply",  pred:"./static/ply/RMIT_RMIT_test_instance_prediction.ply"},
+    sem:{gt:"./static/ply/RMIT_RMIT_test_semantic_gt.ply",  pred:"./static/ply/RMIT_RMIT_test_semantic_prediction.ply"}
+  },
+  scene7:{
+    geo:{gt:"./static/ply/SCION_SCION_plot_31_instance_gt.ply",  pred:"./static/ply/SCION_SCION_plot_31_instance_prediction.ply"},
+    sem:{gt:"./static/ply/SCION_SCION_plot_31_semantic_gt.ply",  pred:"./static/ply/SCION_SCION_plot_31_semantic_prediction.ply"}
+  },
+  scene8:{
+    geo:{gt:"./static/ply/TUWIEN_TUWIEN_test_instance_gt.ply",  pred:"./static/ply/TUWIEN_TUWIEN_test_instance_prediction.ply"},
+    sem:{gt:"./static/ply/TUWIEN_TUWIEN_test_semantic_gt.ply",  pred:"./static/ply/TUWIEN_TUWIEN_test_semantic_prediction.ply"}
+  },
+  scene9:{
+    geo:{gt:"./static/ply/Yuchen_2023_dls_merged_instance_gt.ply",  pred:"./static/ply/Yuchen_2023_dls_merged_instance_prediction.ply"},
+    sem:{gt:"./static/ply/Yuchen_2023_dls_merged_semantic_gt.ply",  pred:"./static/ply/Yuchen_2023_dls_merged_semantic_prediction.ply"}
+  }
+};
+
+let mode  = "geo";          
+let sceneName = "scene1";    
+
+const cvs   = [document.getElementById("c1"), document.getElementById("c2")];
+const scn   = [], cam=[], ren=[], ctrl=[], loader=new PLYLoader();
+
+for(let i=0;i<2;i++){
+  scn[i] = new THREE.Scene();
+  cam[i]   = new THREE.PerspectiveCamera(60, cvs[i].clientWidth/cvs[i].clientHeight, 0.01, 1000);
+  cam[i].up.set(0,0,1);          
+  cam[i].position.set(0, -5, 0); 
+  ren[i]   = new THREE.WebGLRenderer({canvas:cvs[i], antialias:true});
+  ren[i].setSize(cvs[i].clientWidth, cvs[i].clientHeight);
+  ren[i].setClearColor(0xffffff, 1);  
+  ctrl[i]  = new OrbitControls(cam[i], cvs[i]);
+  ctrl[i].enableDamping  = true;   
+  ctrl[i].dampingFactor  = 0.15;   
+  ctrl[i].rotateSpeed    = 0.7;    
+  ctrl[i].zoomSpeed      = 0.9;
+  ctrl[i].addEventListener("change", ()=>sync(i));
+}
+
+function sync(src){
+  const dst = 1-src;
+  cam[dst].position.copy(cam[src].position);
+  cam[dst].quaternion.copy(cam[src].quaternion);
+  ctrl[dst].target.copy(ctrl[src].target);
+}
+
+function loadBoth(){
+  ["gt","pred"].forEach((tag,idx)=>{
+    const src = scenes[sceneName][mode][tag];
+    scn[idx].children.filter(o=>o.isPoints).forEach(o=>scn[idx].remove(o));
+    loader.load(src, geo=>{
+      geo.computeBoundingBox();geo.center();
+      geo.computeBoundingSphere();
+      const R = geo.boundingSphere.radius;
+      const hasColor = geo.hasAttribute('color');
+      const mat = new THREE.PointsMaterial({size:R*0.01,vertexColors:hasColor,color:0x66ccff});
+      scn[idx].add(new THREE.Points(geo,mat));
+      cam[idx].position.set(0, -R*3, 0);          
+      ctrl[idx].target.set(0, 0, 0);             
+      ctrl[idx].update();   
+      ctrl[idx].target.set(0,0,0);ctrl[idx].update();
+    });
+  });
+}
+loadBoth();            
+
+document.querySelectorAll(".switch").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".switch").forEach(b=>b.classList.add("is-light"));
+    btn.classList.remove("is-light");
+    mode = btn.dataset.mode;  
+    loadBoth();
+  };
+});
+
+document.querySelectorAll("#thumb-bar .thumb").forEach(img=>{
+  img.onclick = ()=>{
+    document.querySelectorAll("#thumb-bar .thumb").forEach(i=>i.classList.remove("active"));
+    img.classList.add("active");
+    sceneName = img.dataset.scene;   
+    loadBoth();
+  };
+});
+
+(function animate(){ requestAnimationFrame(animate);
+  for(let i=0;i<2;i++) ren[i].render(scn[i], cam[i]); })();
+</script>
+
+
+<script>
+  $(function(){ $('#results-carousel').slick({infinite:true,slidesToShow:1,slidesToScroll:1,arrows:true,dots:true,autoplay:true,autoplaySpeed:3000,fade:true,centerMode:true}); });
+</script>
+</body>
+</html>

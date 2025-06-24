@@ -1,0 +1,70 @@
+<!-- index.html  (放到 http://localhost:8000/ 测试) -->
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><title>PLY demo</title>
+<style>body{margin:0}canvas{width:50%;height:100vh;display:inline-block}</style>
+
+<!-- Three.js & 附件（unpkg CDN，同版号 0.161.0） -->
+<script type="module">
+import * as THREE from "./static/js/three.module.js";
+import {OrbitControls} from "./static/js/OrbitControls.js";
+import {PLYLoader}    from "./static/js/PLYLoader.js";
+
+/* ---------- 页面元素 ---------- */
+const cvs=[document.createElement('canvas'),document.createElement('canvas')];
+document.body.append(...cvs);
+
+/* ---------- 场景相机渲染 ---------- */
+const scn=[],cam=[],ren=[],ctl=[];
+cvs.forEach((cv,i)=>{
+  scn[i]=new THREE.Scene();
+  cam[i]=new THREE.PerspectiveCamera(60,cv.clientWidth/cv.clientHeight,0.01,1000);
+  ren[i]=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  ren[i].setSize(cv.clientWidth,cv.clientHeight);
+  ctl[i]=new OrbitControls(cam[i],cv);
+  ctl[i].addEventListener('change',()=>sync(i));
+});
+function sync(src){
+  const dst=1-src;
+  cam[dst].position.copy(cam[src].position);
+  cam[dst].quaternion.copy(cam[src].quaternion);
+  ctl[dst].target.copy(ctl[src].target);
+}
+
+/* ---------- 点云文件 ---------- */
+const files={
+  geo:{gt:"./static/ply/scene1_gt.ply",   pred:"./static/ply/scene1_pred.ply"},
+  sem:{gt:"./static/ply/scene1_sem_gt.ply",pred:"./static/ply/scene1_sem_pred.ply"}
+};
+let mode="geo";
+const loader=new PLYLoader();
+
+function load(kind){
+  ["gt","pred"].forEach((tag,idx)=>{
+    scn[idx].children.filter(o=>o.isPoints).forEach(o=>scn[idx].remove(o));
+    loader.load(files[kind][tag],geo=>{
+      geo.computeBoundingBox();geo.center();
+      geo.computeBoundingSphere();
+      const R=geo.boundingSphere.radius;
+      const hasColor=geo.hasAttribute('color');
+      const mat=new THREE.PointsMaterial({size:R*0.01,vertexColors:hasColor,color:0x66ccff});
+      scn[idx].add(new THREE.Points(geo,mat));
+      cam[idx].position.set(R*2,R*2,R*2);
+      ctl[idx].target.set(0,0,0);ctl[idx].update();
+    });
+  });
+}
+load(mode);
+
+/* ---------- 简单切换按钮 ---------- */
+const btn=document.createElement('button');
+btn.textContent='Toggle Semantic/Geometry';
+btn.style.position='fixed';btn.style.top='10px';btn.style.left='10px';
+btn.onclick=()=>{mode=mode==="geo"?"sem":"geo";load(mode);};
+document.body.append(btn);
+
+/* ---------- 渲染循环 ---------- */
+function animate(){requestAnimationFrame(animate);
+  ren.forEach((r,i)=>r.render(scn[i],cam[i]));}
+animate();
+</script>
+</head><body></body></html>
